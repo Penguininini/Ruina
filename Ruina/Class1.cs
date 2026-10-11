@@ -11,7 +11,8 @@ using FrameworkLoader;
 
 namespace Ruina
 {
-    public class Class1
+    public class ModInit : ModInitializer
     {
+        public static string packageId = "JohnPrescripts.author";
     }
 }

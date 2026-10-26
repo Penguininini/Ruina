@@ -28,6 +28,10 @@ namespace Ruina
         public string KeywordBufName => "MultiFold_Def"; // in most cases you'll want this name to be UNIQUE, so prefix it with your mod id or something; also it must be a valid name for an enum value (so no spaces, punctuation, starting from digits and the like)
         public override KeywordBuf bufType => this.KeywordBuf;
 
+        protected override string keywordIconId => "MultiFold_Def_Icon";
+
+        protected override string keywordId => "MultiFold_Def_Id";
+
         //the rest of your buf code
 
         public override void BeforeRollDice(BattleDiceBehavior behavior) 

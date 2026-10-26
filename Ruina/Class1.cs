@@ -43,6 +43,27 @@ namespace Ruina
                 behavior.ApplyDiceStatBonus(new DiceStatBonus { power = stack }); //When rolling evade die, gain power equal to stack
             }
         }
+
+        public override void OnStartBattle()
+        {
+            base.OnStartBattle();
+
+            DiceCardXmlInfo cardItem = ItemXmlDataList.instance.GetCardItem(new LorId("JohnPrescripts.author",2));
+
+            List<BattleDiceBehavior> list = new List<BattleDiceBehavior>();
+
+            int num = 0;
+
+            foreach (DiceBehaviour diceBehaviour in cardItem.DiceBehaviourList)
+            {
+                BattleDiceBehavior battleDiceBehavior = new BattleDiceBehavior();
+                battleDiceBehavior.behaviourInCard = diceBehaviour.Copy();
+                battleDiceBehavior.SetIndex(num++);
+                list.Add(battleDiceBehavior);
+            }
+
+            _owner.cardSlotDetail.keepCard.AddBehaviours(cardItem, list);
+        }
     }
 
     

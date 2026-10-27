@@ -60,14 +60,36 @@ namespace Ruina
             }
         }
 
-        public override void BeforeRollDice(BattleDiceBehavior behavior) 
+
+        public override void BeforeRollDice(BattleDiceBehavior behavior)
         {
             base.BeforeRollDice(behavior);
 
             if (behavior.Detail == BehaviourDetail.Evasion)
             {
                 behavior.ApplyDiceStatBonus(new DiceStatBonus { power = stack }); //When rolling evade die, gain power equal to stack
+
+                if (IsDefenseDice(behavior.card.target.currentDiceAction.currentBehavior.Detail)) //If a defensive die clashes with any evade on john, lose 5 MultiFold_Def
+                {
+                    stack = Math.Max(0, stack - 5);
+                }
+
+                if (IsAttackDice(behavior.card.target.currentDiceAction.currentBehavior.Detail)) //If an offensive die clashes with any evade on john, lose 1 MultiFold_Def
+                {
+                    stack = Math.Max(0, stack - 1);
+                }
             }
+        }
+
+        public override void OnLoseParrying(BattleDiceBehavior behavior) //If any offensive die win against an evade that john has then lose 10 MultiFold_Def
+        {
+            base.OnLoseParrying(behavior);
+
+            if (behavior.Detail == BehaviourDetail.Evasion && IsAttackDice(behavior.card.target.currentDiceAction.currentBehavior.Detail))
+            {
+                stack = Math.Max(0, stack - 10); //Prevent value from going below 0
+            }
+            
         }
 
         public override void OnStartBattle()

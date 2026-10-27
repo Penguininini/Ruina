@@ -9,6 +9,7 @@ using ConvertBufAggregate;
 using EnumExtenderV2;
 using FrameworkLoader;
 using LOR_DiceSystem;
+using System.Security.Cryptography.X509Certificates;
 
 
 namespace Ruina
@@ -35,7 +36,6 @@ namespace Ruina
 
         protected override string keywordId => "MultiFold_Def_Id";
 
-        
 
         public void AddCounterDie(int amount) //Simple method for adding the 1-1 counter die page. 
         {
@@ -81,16 +81,49 @@ namespace Ruina
             }
         }
 
-        public override void OnLoseParrying(BattleDiceBehavior behavior) //If any offensive die win against an evade that john has then lose 10 MultiFold_Def
+        public override void OnLoseParrying(BattleDiceBehavior behavior) 
         {
             base.OnLoseParrying(behavior);
 
-            if (behavior.Detail == BehaviourDetail.Evasion && IsAttackDice(behavior.card.target.currentDiceAction.currentBehavior.Detail))
+            if (behavior.Detail == BehaviourDetail.Evasion && IsAttackDice(behavior.card.target.currentDiceAction.currentBehavior.Detail)) //If any offensive die win against an evade that john has then lose 10 MultiFold_Def
             {
                 stack = Math.Max(0, stack - 10); //Prevent value from going below 0
             }
             
         }
+
+        int dmgReduc = 0; //Set damage reduction to 0 for future damage calcs
+
+        public override void BeforeLoseParrying(BattleDiceBehavior behavior)
+        {
+            base.BeforeLoseParrying(behavior);
+
+            if (IsAttackDice(behavior.Detail) && IsAttackDice(behavior.card.target.currentDiceAction.currentBehavior.Detail)) //Take half damage when being hit by an offensive through an offensive die, take none if clash difference was 2 or lower
+            {
+                if (behavior.card.target.currentDiceAction.currentBehavior.DiceResultValue - behavior.DiceResultValue <= 2)
+                {
+                    dmgReduc = 100;
+                }
+                else
+                {
+                    dmgReduc = 50;
+                }
+
+                stack = Math.Max(0, stack - 2);
+
+            }
+        }
+
+        public override int GetDamageReductionRate()
+        {
+            return dmgReduc;
+        }
+
+        public override void AfterTakeDamage(BattleUnitModel attacker, int dmg) //Reset damage reduction to 0 after being hit
+        {
+            dmgReduc = 0;
+        }
+
 
         public override void OnStartBattle()
         {

@@ -24,9 +24,10 @@ namespace Ruina
     static class MyKeywords
     {
         public static KeywordBuf MultiFold_Def;
+        public static KeywordBuf OverLoad;
     }
 
-    class BattleUnitBuf_MultiFold_Def : GLHF_UnitBufBase, IRefKeywordBuf //
+    class BattleUnitBuf_MultiFold_Def : GLHF_UnitBufBase, IRefKeywordBuf
     {
         public ref KeywordBuf KeywordBuf => ref MyKeywords.MultiFold_Def;
         public string KeywordBufName => "MultiFold_Def";  
@@ -37,7 +38,7 @@ namespace Ruina
         protected override string keywordId => "MultiFold_Def_Id";
 
 
-        public void AddCounterDie(int amount) //Simple method for adding the 1-1 counter die page. 
+        public void AddCounterDie(int amount) //Simple custom method for adding the 1-1 counter die page. 
         {
             DiceCardXmlInfo card = ItemXmlDataList.instance.GetCardItem(new LorId("JohnPrescripts.author", 2)); //Page id 2 is the 1-1 counter die page
 
@@ -60,6 +61,15 @@ namespace Ruina
             }
         }
 
+        public override void OnRoundEnd()
+        {
+            base.OnRoundEnd();
+            if (stack <= 0)
+            {
+                _owner.bufListDetail.AddKeywordBufByEtc(MyKeywords.OverLoad, 1, _owner); //When round ends, gain 1 overload and 100 MultiFold_Def if stack is equal or under 0
+                stack += 100; //TODO: Each overload makes the stack gain go down by 50 each time until the resulting value is 0 where MultiFold_Def is then removed.
+            }
+        }
 
         public override void BeforeRollDice(BattleDiceBehavior behavior)
         {
@@ -132,7 +142,18 @@ namespace Ruina
         }
     }
 
-    public class DiceCardAbility_CounterEvadeWin : DiceCardAbilityBase //When the counter die wins a clash, add 2 more counter dice to the queue
+    class BattleUnitBuf_OverLoad : GLHF_UnitBufBase, IRefKeywordBuf
+    {
+        public ref KeywordBuf KeywordBuf => ref MyKeywords.OverLoad;
+        public string KeywordBufName => "OverLoad";
+        public override KeywordBuf bufType => this.KeywordBuf;
+
+        protected override string keywordIconId => "OverLoad_Icon";
+
+        protected override string keywordId => "OverLoad_Id";
+
+    }
+        public class DiceCardAbility_CounterEvadeWin : DiceCardAbilityBase //When the counter die wins a clash, add 2 more counter dice to the queue
     {
         public override void OnWinParrying()
         {

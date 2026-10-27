@@ -10,29 +10,55 @@ using EnumExtenderV2;
 using FrameworkLoader;
 using LOR_DiceSystem;
 
+
 namespace Ruina
 {
+
+
     public class ModInit : ModInitializer
     {
         public static string packageId = "JohnPrescripts.author";
     }
 
-    static class MyKeywords //the name isn't important
+    static class MyKeywords
     {
-        public static KeywordBuf MultiFold_Def; // this name isn't important either (won't be visible outside of your own dll)
+        public static KeywordBuf MultiFold_Def;
     }
 
-    class BattleUnitBuf_MultiFold_Def : GLHF_UnitBufBase, IRefKeywordBuf // your class name also isn't important
+    class BattleUnitBuf_MultiFold_Def : GLHF_UnitBufBase, IRefKeywordBuf //
     {
         public ref KeywordBuf KeywordBuf => ref MyKeywords.MultiFold_Def;
-        public string KeywordBufName => "MultiFold_Def"; // in most cases you'll want this name to be UNIQUE, so prefix it with your mod id or something; also it must be a valid name for an enum value (so no spaces, punctuation, starting from digits and the like)
+        public string KeywordBufName => "MultiFold_Def";  
         public override KeywordBuf bufType => this.KeywordBuf;
 
         protected override string keywordIconId => "MultiFold_Def_Icon";
 
         protected override string keywordId => "MultiFold_Def_Id";
 
-        //the rest of your buf code
+        
+
+        public void AddCounterDie(int amount) //Simple method for adding the 1-1 counter die page. 
+        {
+            DiceCardXmlInfo card = ItemXmlDataList.instance.GetCardItem(new LorId("JohnPrescripts.author", 2)); //Page id 2 is the 1-1 counter die page
+
+            for (int i = 0; i < amount; i++)
+            {
+                List<BattleDiceBehavior> dice = new List<BattleDiceBehavior>();
+
+                int num = 0;
+
+                foreach (DiceBehaviour diceBehaviour in card.DiceBehaviourList)
+                {
+                    BattleDiceBehavior behavior = new BattleDiceBehavior();
+                    behavior.behaviourInCard = diceBehaviour.Copy();
+                    behavior.SetIndex(num++);
+                    behavior.AddAbility(new DiceCardAbility_CounterEvadeWin()); //Give the counter die its ability to add more counter dice when winning a clash.
+                    dice.Add(behavior);
+                }
+
+                _owner.cardSlotDetail.keepCard.AddBehaviours(card, dice);
+            }
+        }
 
         public override void BeforeRollDice(BattleDiceBehavior behavior) 
         {
@@ -47,28 +73,26 @@ namespace Ruina
         public override void OnStartBattle()
         {
             base.OnStartBattle();
-
-            DiceCardXmlInfo cardItem = ItemXmlDataList.instance.GetCardItem(new LorId("JohnPrescripts.author",2));
-
-            List<BattleDiceBehavior> list = new List<BattleDiceBehavior>();
-
-            int num = 0;
-
-            foreach (DiceBehaviour diceBehaviour in cardItem.DiceBehaviourList)
-            {
-                BattleDiceBehavior battleDiceBehavior = new BattleDiceBehavior();
-                battleDiceBehavior.behaviourInCard = diceBehaviour.Copy();
-                battleDiceBehavior.SetIndex(num++);
-                list.Add(battleDiceBehavior);
-            }
-
-            _owner.cardSlotDetail.keepCard.AddBehaviours(cardItem, list);
+            AddCounterDie(1); //At combat start, add a 1-1 counter die to queue
         }
     }
 
+    public class DiceCardAbility_CounterEvadeWin : DiceCardAbilityBase //When the counter die wins a clash, add 2 more counter dice to the queue
+    {
+        public override void OnWinParrying()
+        {
+            base.OnWinParrying();
+
+            BattleUnitBuf_MultiFold_Def buf = owner.bufListDetail.GetActivatedBuf(MyKeywords.MultiFold_Def) as BattleUnitBuf_MultiFold_Def;
+            if (buf != null)
+            {
+                buf.AddCounterDie(2);
+            }
+        }
+    }
     
 
-    public class PassiveAbility_MultiFold : GLHF_PassiveAbilityBase //Start with 200 multifold def and 21 off, also when using pages spend 1 off for every light, 0 cost will spend 1 off
+    public class PassiveAbility_MultiFold : GLHF_PassiveAbilityBase //TODO: Start with 200 multifold def and 21 off, also when using pages spend 1 off for every light, 0 cost will spend 1 off
     {
         public override void OnWaveStart()
         {

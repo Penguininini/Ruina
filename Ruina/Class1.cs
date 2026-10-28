@@ -64,12 +64,26 @@ namespace Ruina
         public override void OnRoundEnd()
         {
             base.OnRoundEnd();
+
             if (stack <= 0)
             {
-                _owner.bufListDetail.AddKeywordBufByEtc(MyKeywords.OverLoad, 1, _owner); //When round ends, gain 1 overload and 100 MultiFold_Def if stack is equal or under 0
-                stack += 100; //TODO: Each overload makes the stack gain go down by 50 each time until the resulting value is 0 where MultiFold_Def is then removed.
+                _owner.bufListDetail.AddKeywordBufThisRoundByEtc(MyKeywords.OverLoad, 1, _owner); //When round ends, gain 1 overload
+
+                BattleUnitBuf overload = _owner.bufListDetail.GetActivatedBuf(MyKeywords.OverLoad);
+
+                int stackGain = Math.Max(0, 200 - (overload.stack * 50)); //Value for Reducing MultiFold_Def regeneration by 50 for each OverLoad stack, with a minimum gain of 0
+
+                if (stackGain > 0)
+                {
+                    stack += stackGain;
+                }
+                else
+                {
+                    _owner.bufListDetail.RemoveBuf(this); //Remove buf when stack gain is 0;
+                }
             }
         }
+        
 
         public override void BeforeRollDice(BattleDiceBehavior behavior)
         {

@@ -9,8 +9,8 @@
     <CanReceivePassive>false</CanReceivePassive>
     <InnerType>-1</InnerType>
     <Cost>1</Cost>
-    <Script>JohnPassive</Script>
-    <Name>JohnPassive</Name>
-    <Desc>JohnPassive</Desc>
+    <Script>MultiFold</Script>
+    <Name>Multifold afterimage</Name>
+    <Desc></Desc>
   </Passive>
 </PassiveXmlRoot>

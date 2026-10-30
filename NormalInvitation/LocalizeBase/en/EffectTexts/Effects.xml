@@ -14,7 +14,7 @@
 
     <BattleEffectText ID="MultiFold_Off_Id">
       <Name>Multifold afterimage offensive</Name>
-      <Desc>Offensive die gain {0/10} /10 power</Desc>
+      <Desc>Offensive die gain {0} / 10 power</Desc>
     </BattleEffectText>
 
   </effectTextList>

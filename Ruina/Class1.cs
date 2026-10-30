@@ -12,6 +12,10 @@ using LOR_DiceSystem;
 using System.Security.Cryptography.X509Certificates;
 
 
+//TRY TO KEEP EVERYTHING BUNDLED TOGETHER. FOR EXAMPLE BUFS WOULD BE TOGETHER THEN DICECARDABILITIES ETC.
+//ALSO TRY TO KEEP EVERYTHING RELATED WITH AN EFFECT BUNDLED WITHIN THE EFFECT CODE ITSELF. I DO NOT WANT A SPRAWLING MESS OF CODE.
+//FOR SUFFICIENTLY LONG PARTS OF CODE (SUCH AS MultiFold_Def) MARK THE END CURLY BRACKET WITH A COMMENT LIKE THIS: END OF MultiFold_Def CODE
+
 namespace Ruina
 {
 
@@ -25,6 +29,7 @@ namespace Ruina
     {
         public static KeywordBuf MultiFold_Def;
         public static KeywordBuf OverLoad;
+        public static KeywordBuf MultiFold_Off;
     }
 
     class BattleUnitBuf_MultiFold_Def : GLHF_UnitBufBase, IRefKeywordBuf
@@ -154,19 +159,27 @@ namespace Ruina
             base.OnStartBattle();
             AddCounterDie(1); //At combat start, add a 1-1 counter die to queue
         }
-    }
+    } //END OF MultiFold_Def CODE
 
     class BattleUnitBuf_OverLoad : GLHF_UnitBufBase, IRefKeywordBuf
     {
         public ref KeywordBuf KeywordBuf => ref MyKeywords.OverLoad;
         public string KeywordBufName => "OverLoad";
         public override KeywordBuf bufType => this.KeywordBuf;
-
         protected override string keywordIconId => "OverLoad_Icon";
-
         protected override string keywordId => "OverLoad_Id";
 
     }
+
+    class BattleUnitBuf_MultiFold_Off : GLHF_UnitBufBase, IRefKeywordBuf
+    {
+        public ref KeywordBuf KeywordBuf => ref MyKeywords.MultiFold_Off;
+        public string KeywordBufName => "MultiFold_Off";
+        public override KeywordBuf bufType => this.KeywordBuf;
+        protected override string keywordIconId => "MultiFold_Off_Icon";
+        protected override string keywordId => "MultiFold_Off_Id";
+    }
+
         public class DiceCardAbility_CounterEvadeWin : DiceCardAbilityBase //When the counter die wins a clash, add 2 more counter dice to the queue
     {
         public override void OnWinParrying()
@@ -188,6 +201,7 @@ namespace Ruina
         {
             base.OnWaveStart();
             owner.bufListDetail.AddKeywordBufByEtc(MyKeywords.MultiFold_Def, 200, owner);
+            owner.bufListDetail.AddKeywordBufByEtc(MyKeywords.MultiFold_Off, 21, owner);
         }
     }
 }

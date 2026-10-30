@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <BattleEffectTextRoot xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <effectTextList>
+
     <BattleEffectText ID="MultiFold_Def_Id">
       <Name>Multifold afterimage defensive</Name>
       <Desc>evade dice power + {0}</Desc>
@@ -10,5 +11,11 @@
       <Name>Overload</Name>
       <Desc>thing{0}</Desc>
     </BattleEffectText>
+
+    <BattleEffectText ID="MultiFold_Off_Id">
+      <Name>Multifold afterimage offensive</Name>
+      <Desc>Offensive die gain {0/10} /10 power</Desc>
+    </BattleEffectText>
+
   </effectTextList>
 </BattleEffectTextRoot>

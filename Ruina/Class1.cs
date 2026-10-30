@@ -84,7 +84,7 @@ namespace Ruina
                 }
                 else
                 {
-                    _owner.bufListDetail.RemoveBuf(this); //Remove buf when stack gain is 0;
+                    _owner.bufListDetail.RemoveBuf(this); //Remove buf when stack gain is 0. I think destroy() works for this as well so try changing it.
                 }
             }
         }
@@ -178,6 +178,51 @@ namespace Ruina
         public override KeywordBuf bufType => this.KeywordBuf;
         protected override string keywordIconId => "MultiFold_Off_Icon";
         protected override string keywordId => "MultiFold_Off_Id";
+
+
+        public override void BeforeRollDice(BattleDiceBehavior behavior)
+        {
+            base.BeforeRollDice(behavior);
+
+            if (IsAttackDice(behavior.Detail))
+            {
+                behavior.ApplyDiceStatBonus(new DiceStatBonus { power = stack / 10 }); //Gain +1 offensive power for every 10 stacks.
+            }
+        }
+
+        bool gainedOff = false; //Variable to store if a page has gained MultiFold_Off or not
+        public override void OnStartParrying(BattlePlayingCardDataInUnitModel card)
+        {
+            base.OnStartParrying(card);
+            gainedOff = false; //Set to false at the start of a page being used
+        }
+
+        public override void OnWinParrying(BattleDiceBehavior behavior)
+        {
+            base.OnWinParrying(behavior);
+
+            if (IsAttackDice(behavior.Detail) && !gainedOff) //Only proceed if this page has not gained MultiFold_Off
+            {
+                stack += 2;
+                gainedOff = true;
+            }
+        }
+
+        public override void OnLoseParrying(BattleDiceBehavior behavior)
+        {
+            base.OnLoseParrying(behavior);
+
+            if (IsAttackDice(behavior.Detail))
+            {
+                stack = Math.Max(0, stack -2); //Lose 2 stack everyime an offensive die loses a clash
+            }
+        }
+
+        public override void OnEndParrying()
+        {
+            base.OnEndParrying();
+            gainedOff = false; //Make value false just as a fail safe in case OnStartParrying does not set it to false.
+        }
     }
 
         public class DiceCardAbility_CounterEvadeWin : DiceCardAbilityBase //When the counter die wins a clash, add 2 more counter dice to the queue

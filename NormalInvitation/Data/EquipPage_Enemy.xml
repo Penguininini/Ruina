@@ -12,7 +12,7 @@
       <Break>200</Break>
       <SpeedMin>1</SpeedMin>
       <Speed>10</Speed>
-      <SpeedDiceNum>0</SpeedDiceNum>
+      <SpeedDiceNum>4</SpeedDiceNum>
       <SResist>Resist</SResist>
       <PResist>Resist</PResist>
       <HResist>Normal</HResist>
@@ -35,7 +35,7 @@
     <RangeType>Hybrid</RangeType>
     <NotEquip>false</NotEquip>
     <RandomFace>false</RandomFace>
-    <SpeedDiceNum>1</SpeedDiceNum>
+    <SpeedDiceNum>4</SpeedDiceNum>
     <SuccessionPossibleNumber>9</SuccessionPossibleNumber>
   </Book>
 </BookXmlRoot>

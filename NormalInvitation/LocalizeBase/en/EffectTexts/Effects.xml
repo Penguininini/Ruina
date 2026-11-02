@@ -17,5 +17,10 @@
       <Desc>Offensive die gain {0} / 10 power</Desc>
     </BattleEffectText>
 
+    <BattleEffectText ID="GracePrescriptLoki_Id">
+      <Name>Grace of the prescripts and loki</Name>
+      <Desc>Die on this page gain +2 power and gain and lose double the amount of multifold afterimage offensive</Desc>
+    </BattleEffectText>
+
   </effectTextList>
 </BattleEffectTextRoot>

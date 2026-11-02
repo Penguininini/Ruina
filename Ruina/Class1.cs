@@ -3,6 +3,7 @@ using ConvertBufAggregate;
 using EnumExtenderV2;
 using FrameworkLoader;
 using GLHF;
+using HyperCard;
 using LOR_DiceSystem;
 using Sd;
 using System;
@@ -36,7 +37,7 @@ namespace Ruina
     class BattleUnitBuf_MultiFold_Def : GLHF_UnitBufBase, IRefKeywordBuf
     {
         public ref KeywordBuf KeywordBuf => ref MyKeywords.MultiFold_Def;
-        public string KeywordBufName => "MultiFold_Def";  
+        public string KeywordBufName => "MultiFold_Def";
         public override KeywordBuf bufType => this.KeywordBuf;
 
         protected override string keywordIconId => "MultiFold_Def_Icon";
@@ -89,7 +90,7 @@ namespace Ruina
                 }
             }
         }
-        
+
 
         public override void BeforeRollDice(BattleDiceBehavior behavior)
         {
@@ -111,7 +112,7 @@ namespace Ruina
             }
         }
 
-        public override void OnLoseParrying(BattleDiceBehavior behavior) 
+        public override void OnLoseParrying(BattleDiceBehavior behavior)
         {
             base.OnLoseParrying(behavior);
 
@@ -119,7 +120,7 @@ namespace Ruina
             {
                 stack = Math.Max(0, stack - 10); //Prevent value from going below 0
             }
-            
+
         }
 
         int dmgReduc = 0; //Set damage reduction to 0 for future damage calcs
@@ -207,7 +208,14 @@ namespace Ruina
         {
             base.OnWinParrying(behavior);
 
-            if (IsAttackDice(behavior.Detail) && !gainedOff) //Only proceed if this page has not gained MultiFold_Off
+            bool hasGracePrescriptLoki = behavior.card.card.GetBufList().Any(x => x is PassiveAbility_GracePrescriptLoki.BattleDiceCardBuf_GracePrescriptLoki);
+
+            if (IsAttackDice(behavior.Detail) && !gainedOff && hasGracePrescriptLoki) 
+            {
+                stack += 4;
+                gainedOff = true;
+            }
+            else if (IsAttackDice(behavior.Detail) && !gainedOff) //Only proceed if this page has not gained MultiFold_Off
             {
                 stack += 2;
                 gainedOff = true;
@@ -218,9 +226,16 @@ namespace Ruina
         {
             base.OnLoseParrying(behavior);
 
-            if (IsAttackDice(behavior.Detail))
+            bool hasGracePrescriptLoki = behavior.card.card.GetBufList().Any(x => x is PassiveAbility_GracePrescriptLoki.BattleDiceCardBuf_GracePrescriptLoki);
+
+            if (IsAttackDice(behavior.Detail) && hasGracePrescriptLoki)
             {
-                stack = Math.Max(0, stack -2); //Lose 2 stack everyime an offensive die loses a clash
+                stack = Math.Max(0, stack - 4); 
+            }
+
+            else if (IsAttackDice(behavior.Detail))
+            {
+                stack = Math.Max(0, stack - 2); //Lose 2 stack everyime an offensive die loses a clash
             }
         }
 
@@ -281,11 +296,11 @@ namespace Ruina
             }
         }
 
-        
+
     } //END OF MultiFold_Off CODE
 
 
-        public class DiceCardAbility_CounterEvadeWin : DiceCardAbilityBase //When the counter die wins a clash, add 2 more counter dice to the queue
+    public class DiceCardAbility_CounterEvadeWin : DiceCardAbilityBase //When the counter die wins a clash, add 2 more counter dice to the queue
     {
         public override void OnWinParrying()
         {
@@ -298,7 +313,7 @@ namespace Ruina
             }
         }
     }
-    
+
 
     public class PassiveAbility_MultiFold : GLHF_PassiveAbilityBase //TODO: Start with 200 multifold def and 21 off, also when using pages spend 1 off for every light, 0 cost will spend 1 off
     {
@@ -308,5 +323,46 @@ namespace Ruina
             owner.bufListDetail.AddKeywordBufByEtc(MyKeywords.MultiFold_Def, 200, owner);
             owner.bufListDetail.AddKeywordBufByEtc(MyKeywords.MultiFold_Off, 21, owner);
         }
+    }
+
+    public class PassiveAbility_GracePrescriptLoki : GLHF_PassiveAbilityBase
+    {
+        public class BattleDiceCardBuf_GracePrescriptLoki : BattleDiceCardBuf //Simple battlcardbuf to inform the player which card has the buf
+        {
+            protected override string keywordIconId => "GracePrescriptLoki_Icon"; //Localization manager stuff.
+            protected override string keywordId => "GracePrescriptLoki_Id";
+            public override void OnUseCard(BattleUnitModel owner, BattlePlayingCardDataInUnitModel playingCard)
+            {
+                base.OnUseCard(owner, playingCard);
+                playingCard.ApplyDiceStatBonus(DiceMatch.AllDice, new DiceStatBonus { power = 2 }); //Adds +2 power to the cards with the buf.
+            }
+
+            public override void OnRoundEnd()
+            {
+                base.OnRoundEnd();
+                Destroy();
+            }
+        }
+
+        public override void OnRoundStart()
+        {
+            base.OnRoundStart();
+            List<BattleDiceCardModel> hand = owner.allyCardDetail.GetHand();
+            for (int i = 0; i < 1; i++)
+            {
+                if (hand.Count <= 0)
+                {
+                    break;
+                }
+
+                BattleDiceCardModel card = RandomUtil.SelectOne(hand); //Select a random page in hand and give them the card buf
+
+                card.AddBuf(new BattleDiceCardBuf_GracePrescriptLoki());
+
+                hand.Remove(card);
+            }
+        }
+
+        
     }
 }

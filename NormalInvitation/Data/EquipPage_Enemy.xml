@@ -23,6 +23,7 @@
       <StartPlayPoint>3</StartPlayPoint>
       <AddedStartDraw>0</AddedStartDraw>
       <Passive>1</Passive>
+      <Passive>2</Passive>
     </EquipEffect>
     <Rarity>Common</Rarity>
     <CharacterSkin>Roland</CharacterSkin>

@@ -1,15 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using GLHF;
-using AutoKeywordUtil;
+﻿using AutoKeywordUtil;
 using ConvertBufAggregate;
 using EnumExtenderV2;
 using FrameworkLoader;
+using GLHF;
 using LOR_DiceSystem;
+using Sd;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using System.Threading.Tasks;
 
 
 //TRY TO KEEP EVERYTHING BUNDLED TOGETHER. FOR EXAMPLE BUFS WOULD BE TOGETHER THEN DICECARDABILITIES ETC.
@@ -188,6 +189,11 @@ namespace Ruina
             {
                 behavior.ApplyDiceStatBonus(new DiceStatBonus { power = stack / 10 }); //Gain +1 offensive power for every 10 stacks.
             }
+
+            if (stack <= 0)
+            {
+                behavior.ApplyDiceStatBonus(new DiceStatBonus { power = -999 });
+            }
         }
 
         bool gainedOff = false; //Variable to store if a page has gained MultiFold_Off or not
@@ -223,7 +229,61 @@ namespace Ruina
             base.OnEndParrying();
             gainedOff = false; //Make value false just as a fail safe in case OnStartParrying does not set it to false.
         }
-    }
+
+        private List<BattleDiceBehavior> originallyUnopposedDice = new List<BattleDiceBehavior>();
+
+        public override void OnUseCard(BattlePlayingCardDataInUnitModel card)
+        {
+            base.OnUseCard(card);
+            originallyUnopposedDice.Clear();
+
+            List<BattleDiceBehavior> ownerDice = card.GetDiceBehaviorList();
+            List<BattleDiceBehavior> targetDice = card.target.currentDiceAction?.GetDiceBehaviorList();
+
+            int targetDiceCount = targetDice?.Count ?? 0;
+
+            int unopposedCount = Math.Max(0, ownerDice.Count - targetDiceCount);
+
+            for (int i = ownerDice.Count - unopposedCount; i < ownerDice.Count; i++)
+            {
+                originallyUnopposedDice.Add(ownerDice[i]);
+            }
+        }
+
+        public override void OnSuccessAttack(BattleDiceBehavior behavior) //When hitting target unopposed (counting each die and not effecting recycled die) or hitting an opponent through an evade, gain 1 MultiFold_Off
+        {
+            base.OnSuccessAttack(behavior);
+
+
+            if (!IsAttackDice(behavior.Detail))
+            {
+                return;
+            }
+
+            if (originallyUnopposedDice.Contains(behavior)) // When a Combat Page has more Offensive dice than the target has dice, successful hits with the excess dice grant 1 MultiFold_Off
+            {
+                stack += 1;
+            }
+
+            if (behavior.card.target.currentDiceAction.currentBehavior.Detail == BehaviourDetail.Evasion)
+            {
+                stack += 1;
+            }
+        }
+
+        public override void OnRoundEnd()
+        {
+            base.OnRoundEnd();
+
+            if (stack <= 0)
+            {
+                _owner.bufListDetail.AddKeywordBufByEtc(KeywordBuf.Stun, 1, _owner); //Give immobilize if at 0
+            }
+        }
+
+        
+    } //END OF MultiFold_Off CODE
+
 
         public class DiceCardAbility_CounterEvadeWin : DiceCardAbilityBase //When the counter die wins a clash, add 2 more counter dice to the queue
     {

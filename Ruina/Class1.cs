@@ -320,7 +320,7 @@ namespace Ruina
     }
 
 
-    public class PassiveAbility_MultiFold : GLHF_PassiveAbilityBase //TODO: Start with 200 multifold def and 21 off, also when using pages spend 1 off for every light, 0 cost will spend 1 off
+    public class PassiveAbility_MultiFold : GLHF_PassiveAbilityBase //Start with 200 multifold def and 21 off, also when using pages spend 1 off for every light, 0 cost will spend 1 off
     {
         public override void OnWaveStart()
         {

@@ -250,6 +250,11 @@ namespace Ruina
         public override void OnUseCard(BattlePlayingCardDataInUnitModel card)
         {
             base.OnUseCard(card);
+
+            int cost = card.card.GetCost();
+            int offCost = Math.Max(1, cost);
+            stack -= offCost; //Spend 1 MultiFold_Off for every light, minimum of 1
+
             originallyUnopposedDice.Clear();
 
             List<BattleDiceBehavior> ownerDice = card.GetDiceBehaviorList();

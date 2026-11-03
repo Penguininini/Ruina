@@ -181,6 +181,7 @@ namespace Ruina
         protected override string keywordIconId => "MultiFold_Off_Icon";
         protected override string keywordId => "MultiFold_Off_Id";
 
+        public override string bufActivatedText => BattleEffectTextsXmlList.Instance.GetEffectTextDesc(keywordId, paramInBufDesc, paramInBufDesc / 10);
 
         public override void BeforeRollDice(BattleDiceBehavior behavior)
         {

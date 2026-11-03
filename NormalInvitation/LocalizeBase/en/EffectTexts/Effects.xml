@@ -4,7 +4,10 @@
 
     <BattleEffectText ID="MultiFold_Def_Id">
       <Name>Multifold afterimage defensive</Name>
-      <Desc>evade dice power + {0}</Desc>
+      <Desc>evade dice power + {0} \n gain a 1-1 counter evade at combat start, when the counter evade wins a clash, add 2 more 1-1 counter evade to queue.
+      \n lowers by 10 when hit through an evade, by 5 when a defensive clashes with an evade, by 1 when an offensive clashes with an evade. \n 
+      When being hit through an offensive die, take half as much damage and lower stack by 2,\n
+      if the lost clash was at a difference of 2 or lower, take no damage. When at 0 stack, gain 1 overload and gain 200 stack</Desc>
     </BattleEffectText>
 
     <BattleEffectText ID="OverLoad_Id">
@@ -14,7 +17,7 @@
 
     <BattleEffectText ID="MultiFold_Off_Id">
       <Name>Multifold afterimage offensive</Name>
-      <Desc>Offensive die gain {0} / 10 power</Desc>
+      <Desc>Offensive die gain +1 power for every 10 stack. Current gain is +{1} power</Desc>
     </BattleEffectText>
 
     <BattleEffectText ID="GracePrescriptLoki_Id">

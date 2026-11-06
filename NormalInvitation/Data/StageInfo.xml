@@ -5,6 +5,7 @@
     <Name>John</Name>
     <Wave>
       <Unit>1</Unit>
+      <Unit Pid="@origin">51002</Unit>
       <Formation>41</Formation>
       <FormationType>Default</FormationType>
       <AvailableUnit>5</AvailableUnit>

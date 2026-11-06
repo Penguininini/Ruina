@@ -1,16 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using GLHF;
-using AutoKeywordUtil;
+﻿using AutoKeywordUtil;
 using ConvertBufAggregate;
 using EnumExtenderV2;
 using FrameworkLoader;
+using GLHF;
+using HyperCard;
 using LOR_DiceSystem;
+using Sd;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using System.Threading.Tasks;
 
+
+//TRY TO KEEP EVERYTHING BUNDLED TOGETHER. FOR EXAMPLE BUFS WOULD BE TOGETHER THEN DICECARDABILITIES ETC.
+//ALSO TRY TO KEEP EVERYTHING RELATED WITH AN EFFECT BUNDLED WITHIN THE EFFECT CODE ITSELF. I DO NOT WANT A SPRAWLING MESS OF CODE.
+//FOR SUFFICIENTLY LONG PARTS OF CODE (SUCH AS MultiFold_Def) MARK THE END CURLY BRACKET WITH A COMMENT LIKE THIS: END OF MultiFold_Def CODE
 
 namespace Ruina
 {
@@ -25,12 +31,13 @@ namespace Ruina
     {
         public static KeywordBuf MultiFold_Def;
         public static KeywordBuf OverLoad;
+        public static KeywordBuf MultiFold_Off;
     }
 
     class BattleUnitBuf_MultiFold_Def : GLHF_UnitBufBase, IRefKeywordBuf
     {
         public ref KeywordBuf KeywordBuf => ref MyKeywords.MultiFold_Def;
-        public string KeywordBufName => "MultiFold_Def";  
+        public string KeywordBufName => "MultiFold_Def";
         public override KeywordBuf bufType => this.KeywordBuf;
 
         protected override string keywordIconId => "MultiFold_Def_Icon";
@@ -79,11 +86,11 @@ namespace Ruina
                 }
                 else
                 {
-                    _owner.bufListDetail.RemoveBuf(this); //Remove buf when stack gain is 0;
+                    _owner.bufListDetail.RemoveBuf(this); //Remove buf when stack gain is 0. I think destroy() works for this as well so try changing it.
                 }
             }
         }
-        
+
 
         public override void BeforeRollDice(BattleDiceBehavior behavior)
         {
@@ -105,7 +112,7 @@ namespace Ruina
             }
         }
 
-        public override void OnLoseParrying(BattleDiceBehavior behavior) 
+        public override void OnLoseParrying(BattleDiceBehavior behavior)
         {
             base.OnLoseParrying(behavior);
 
@@ -113,7 +120,7 @@ namespace Ruina
             {
                 stack = Math.Max(0, stack - 10); //Prevent value from going below 0
             }
-            
+
         }
 
         int dmgReduc = 0; //Set damage reduction to 0 for future damage calcs
@@ -154,20 +161,152 @@ namespace Ruina
             base.OnStartBattle();
             AddCounterDie(1); //At combat start, add a 1-1 counter die to queue
         }
-    }
+    } //END OF MultiFold_Def CODE
 
     class BattleUnitBuf_OverLoad : GLHF_UnitBufBase, IRefKeywordBuf
     {
         public ref KeywordBuf KeywordBuf => ref MyKeywords.OverLoad;
         public string KeywordBufName => "OverLoad";
         public override KeywordBuf bufType => this.KeywordBuf;
-
         protected override string keywordIconId => "OverLoad_Icon";
-
         protected override string keywordId => "OverLoad_Id";
 
     }
-        public class DiceCardAbility_CounterEvadeWin : DiceCardAbilityBase //When the counter die wins a clash, add 2 more counter dice to the queue
+
+    class BattleUnitBuf_MultiFold_Off : GLHF_UnitBufBase, IRefKeywordBuf
+    {
+        public ref KeywordBuf KeywordBuf => ref MyKeywords.MultiFold_Off;
+        public string KeywordBufName => "MultiFold_Off";
+        public override KeywordBuf bufType => this.KeywordBuf;
+        protected override string keywordIconId => "MultiFold_Off_Icon";
+        protected override string keywordId => "MultiFold_Off_Id";
+
+        public override string bufActivatedText => BattleEffectTextsXmlList.Instance.GetEffectTextDesc(keywordId, paramInBufDesc, paramInBufDesc / 10);
+
+        public override void BeforeRollDice(BattleDiceBehavior behavior)
+        {
+            base.BeforeRollDice(behavior);
+
+            if (IsAttackDice(behavior.Detail))
+            {
+                behavior.ApplyDiceStatBonus(new DiceStatBonus { power = stack / 10 }); //Gain +1 offensive power for every 10 stacks.
+            }
+
+            if (stack <= 0)
+            {
+                behavior.ApplyDiceStatBonus(new DiceStatBonus { power = -999 });
+            }
+        }
+
+        bool gainedOff = false; //Variable to store if a page has gained MultiFold_Off or not
+        public override void OnStartParrying(BattlePlayingCardDataInUnitModel card)
+        {
+            base.OnStartParrying(card);
+            gainedOff = false; //Set to false at the start of a page being used
+        }
+
+        public override void OnWinParrying(BattleDiceBehavior behavior)
+        {
+            base.OnWinParrying(behavior);
+
+            bool hasGracePrescriptLoki = behavior.card.card.GetBufList().Any(x => x is PassiveAbility_GracePrescriptLoki.BattleDiceCardBuf_GracePrescriptLoki);
+
+            if (IsAttackDice(behavior.Detail) && !gainedOff && hasGracePrescriptLoki) 
+            {
+                stack += 4;
+                gainedOff = true;
+            }
+            else if (IsAttackDice(behavior.Detail) && !gainedOff) //Only proceed if this page has not gained MultiFold_Off
+            {
+                stack += 2;
+                gainedOff = true;
+            }
+        }
+
+        public override void OnLoseParrying(BattleDiceBehavior behavior)
+        {
+            base.OnLoseParrying(behavior);
+
+            bool hasGracePrescriptLoki = behavior.card.card.GetBufList().Any(x => x is PassiveAbility_GracePrescriptLoki.BattleDiceCardBuf_GracePrescriptLoki);
+
+            if (IsAttackDice(behavior.Detail) && hasGracePrescriptLoki)
+            {
+                stack = Math.Max(0, stack - 4); 
+            }
+
+            else if (IsAttackDice(behavior.Detail))
+            {
+                stack = Math.Max(0, stack - 2); //Lose 2 stack everyime an offensive die loses a clash
+            }
+        }
+
+        public override void OnEndParrying()
+        {
+            base.OnEndParrying();
+            gainedOff = false; //Make value false just as a fail safe in case OnStartParrying does not set it to false.
+        }
+
+        private List<BattleDiceBehavior> originallyUnopposedDice = new List<BattleDiceBehavior>();
+
+        public override void OnUseCard(BattlePlayingCardDataInUnitModel card)
+        {
+            base.OnUseCard(card);
+
+            int cost = card.card.GetCost();
+            int offCost = Math.Max(1, cost);
+            stack = Math.Max(0, stack - offCost); //Spend 1 MultiFold_Off for every light, minimum of 1
+
+            originallyUnopposedDice.Clear();
+
+            List<BattleDiceBehavior> ownerDice = card.GetDiceBehaviorList();
+            List<BattleDiceBehavior> targetDice = card.target.currentDiceAction?.GetDiceBehaviorList();
+
+            int targetDiceCount = targetDice?.Count ?? 0;
+
+            int unopposedCount = Math.Max(0, ownerDice.Count - targetDiceCount);
+
+            for (int i = ownerDice.Count - unopposedCount; i < ownerDice.Count; i++)
+            {
+                originallyUnopposedDice.Add(ownerDice[i]);
+            }
+        }
+
+        public override void OnSuccessAttack(BattleDiceBehavior behavior) //When hitting target unopposed (counting each die and not effecting recycled die) or hitting an opponent through an evade, gain 1 MultiFold_Off
+        {
+            base.OnSuccessAttack(behavior);
+
+
+            if (!IsAttackDice(behavior.Detail))
+            {
+                return;
+            }
+
+            if (originallyUnopposedDice.Contains(behavior)) // When a Combat Page has more Offensive dice than the target has dice, successful hits with the excess dice grant 1 MultiFold_Off
+            {
+                stack += 1;
+            }
+
+            if (behavior.card.target.currentDiceAction.currentBehavior.Detail == BehaviourDetail.Evasion)
+            {
+                stack += 1;
+            }
+        }
+
+        public override void OnRoundEnd()
+        {
+            base.OnRoundEnd();
+
+            if (stack <= 0)
+            {
+                _owner.bufListDetail.AddKeywordBufByEtc(KeywordBuf.Stun, 1, _owner); //Give immobilize if at 0
+            }
+        }
+
+
+    } //END OF MultiFold_Off CODE
+
+
+    public class DiceCardAbility_CounterEvadeWin : DiceCardAbilityBase //When the counter die wins a clash, add 2 more counter dice to the queue
     {
         public override void OnWinParrying()
         {
@@ -180,14 +319,56 @@ namespace Ruina
             }
         }
     }
-    
 
-    public class PassiveAbility_MultiFold : GLHF_PassiveAbilityBase //TODO: Start with 200 multifold def and 21 off, also when using pages spend 1 off for every light, 0 cost will spend 1 off
+
+    public class PassiveAbility_MultiFold : GLHF_PassiveAbilityBase //Start with 200 multifold def and 21 off, also when using pages spend 1 off for every light, 0 cost will spend 1 off
     {
         public override void OnWaveStart()
         {
             base.OnWaveStart();
             owner.bufListDetail.AddKeywordBufByEtc(MyKeywords.MultiFold_Def, 200, owner);
+            owner.bufListDetail.AddKeywordBufByEtc(MyKeywords.MultiFold_Off, 21, owner);
         }
+    }
+
+    public class PassiveAbility_GracePrescriptLoki : GLHF_PassiveAbilityBase
+    {
+        public class BattleDiceCardBuf_GracePrescriptLoki : BattleDiceCardBuf //Simple battlcardbuf to inform the player which card has the buf
+        {
+            protected override string keywordIconId => "GracePrescriptLoki_Icon"; //Localization manager stuff.
+            protected override string keywordId => "GracePrescriptLoki_Id";
+            public override void OnUseCard(BattleUnitModel owner, BattlePlayingCardDataInUnitModel playingCard)
+            {
+                base.OnUseCard(owner, playingCard);
+                playingCard.ApplyDiceStatBonus(DiceMatch.AllDice, new DiceStatBonus { power = 2 }); //Adds +2 power to the cards with the buf.
+            }
+
+            public override void OnRoundEnd()
+            {
+                base.OnRoundEnd();
+                Destroy();
+            }
+        }
+
+        public override void OnRoundStart()
+        {
+            base.OnRoundStart();
+            List<BattleDiceCardModel> hand = owner.allyCardDetail.GetHand();
+            for (int i = 0; i < 1; i++)
+            {
+                if (hand.Count <= 0)
+                {
+                    break;
+                }
+
+                BattleDiceCardModel card = RandomUtil.SelectOne(hand); //Select a random page in hand and give them the card buf
+
+                card.AddBuf(new BattleDiceCardBuf_GracePrescriptLoki());
+
+                hand.Remove(card);
+            }
+        }
+
+        
     }
 }

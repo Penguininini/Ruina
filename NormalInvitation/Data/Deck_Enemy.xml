@@ -3,5 +3,8 @@
   <Version>1.1</Version>
   <Deck ID="1">
     <Card>1</Card>
+    <Card Pid="@origin">505004</Card>
+    <Card Pid="@origin">605022</Card>
+    <Card Pid="@origin">605007</Card>
   </Deck>
 </DeckXmlRoot>

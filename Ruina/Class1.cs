@@ -292,13 +292,23 @@ namespace Ruina
             }
         }
 
+        bool GainedImmobilize = false;
+
         public override void OnRoundEnd()
         {
             base.OnRoundEnd();
+            
 
-            if (stack <= 0)
+            if (stack <= 0 && !GainedImmobilize)
             {
                 _owner.bufListDetail.AddKeywordBufByEtc(KeywordBuf.Stun, 1, _owner); //Give immobilize if at 0
+                GainedImmobilize = true;
+            }
+            else if (stack <=0 && GainedImmobilize)
+            {
+                _owner.bufListDetail.AddKeywordBufByEtc(MyKeywords.MultiFold_Off, 21, _owner);
+                GainedImmobilize = false;
+              
             }
         }
 
